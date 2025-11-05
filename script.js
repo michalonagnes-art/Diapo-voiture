@@ -1,230 +1,142 @@
-// Navigation toggle for mobile
-const menuToggle = document.querySelector('.menu-toggle');
-const navLinks = document.querySelector('.nav-links');
+// Gestion de la navigation entre les diapositives
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
 
-menuToggle?.addEventListener('click', () => {
-    navLinks?.classList.toggle('active');
-});
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
 
-// Smooth scroll for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-            navLinks?.classList.remove('active');
-        }
+// Fonction pour afficher une diapositive
+function showSlide(index) {
+    // Masquer toutes les diapositives
+    slides.forEach(slide => {
+        slide.classList.remove('active');
     });
-});
-
-// Navbar scroll effect
-let lastScroll = 0;
-const navbar = document.querySelector('.navbar');
-
-window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
     
-    if (currentScroll > 100) {
-        navbar?.classList.add('scrolled');
-    } else {
-        navbar?.classList.remove('scrolled');
+    // Afficher la diapositive actuelle
+    if (slides[index]) {
+        slides[index].classList.add('active');
     }
     
-    lastScroll = currentScroll;
-});
-
-// Intersection Observer for watch cards animation
-const watchCards = document.querySelectorAll('.watch-card');
-
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
-            setTimeout(() => {
-                entry.target.classList.add('visible');
-            }, index * 100);
-            observer.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
-
-watchCards.forEach(card => {
-    observer.observe(card);
-});
-
-// Animate numbers in stats section
-const animateNumbers = () => {
-    const numbers = document.querySelectorAll('.stat-number');
+    // Mettre à jour les boutons de navigation
+    updateNavigationButtons();
     
-    numbers.forEach(number => {
-        const target = parseInt(number.getAttribute('data-target'));
-        const duration = 2000;
-        const increment = target / (duration / 16);
-        let current = 0;
-        
-        const updateNumber = () => {
-            current += increment;
-            if (current < target) {
-                number.textContent = Math.floor(current).toLocaleString();
-                requestAnimationFrame(updateNumber);
-            } else {
-                number.textContent = target.toLocaleString();
-            }
-        };
-        
-        updateNumber();
-    });
-};
-
-// Observe stats section for animation
-const statsSection = document.querySelector('.stats');
-const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            animateNumbers();
-            statsObserver.unobserve(entry.target);
-        }
-    });
-}, { threshold: 0.5 });
-
-if (statsSection) {
-    statsObserver.observe(statsSection);
+    // Réinitialiser les animations des voitures
+    resetCarAnimations();
 }
 
-// Form submission
-const contactForm = document.querySelector('.contact-form');
-contactForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    // Animation de succès
-    const submitBtn = contactForm.querySelector('.submit-btn');
-    const originalText = submitBtn.textContent;
-    
-    submitBtn.textContent = 'Message envoyé !';
-    submitBtn.style.background = '#4caf50';
-    
-    setTimeout(() => {
-        submitBtn.textContent = originalText;
-        submitBtn.style.background = '';
-        contactForm.reset();
-    }, 2000);
-});
-
-// Parallax effect for hero section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const heroImage = document.querySelector('.watch-display');
-    
-    if (heroImage && scrolled < window.innerHeight) {
-        heroImage.style.transform = `translateY(${scrolled * 0.5}px)`;
-    }
-});
-
-// Watch card hover effects
-watchCards.forEach(card => {
-    const watchImage = card.querySelector('.watch-image');
-    
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        const rotateX = (y - centerY) / 20;
-        const rotateY = (centerX - x) / 20;
-        
-        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
-    });
-    
-    card.addEventListener('mouseleave', () => {
-        card.style.transform = '';
-    });
-});
-
-// Add glow effect to watch cards on scroll
-const addGlowEffect = () => {
-    watchCards.forEach((card, index) => {
-        setTimeout(() => {
-            card.style.transition = 'all 0.4s ease';
-        }, index * 100);
-    });
-};
-
-// Initialize on load
-window.addEventListener('load', () => {
-    addGlowEffect();
-    
-    // Animate hero elements
-    const heroElements = document.querySelectorAll('.hero-title .line, .hero-subtitle, .cta-button');
-    heroElements.forEach((el, index) => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        
-        setTimeout(() => {
-            el.style.transition = 'all 0.8s ease';
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-        }, index * 200);
-    });
-});
-
-// Close mobile menu when clicking outside
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.navbar') && navLinks?.classList.contains('active')) {
-        navLinks.classList.remove('active');
-    }
-});
-
-// Keyboard navigation
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && navLinks?.classList.contains('active')) {
-        navLinks.classList.remove('active');
-    }
-});
-
-// Performance optimization: throttle scroll events
-let ticking = false;
-
-const optimizedScroll = () => {
-    if (!ticking) {
-        window.requestAnimationFrame(() => {
-            // Scroll handlers here
-            ticking = false;
-        });
-        ticking = true;
-    }
-};
-
-// Add subtle animation to section headers
-const sectionHeaders = document.querySelectorAll('.section-header');
-const headerObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '0';
-            entry.target.style.transform = 'translateY(30px)';
-            
+// Réinitialiser les animations des voitures pour la nouvelle diapositive
+function resetCarAnimations() {
+    const activeSlide = document.querySelector('.slide.active');
+    if (activeSlide) {
+        const carBoxes = activeSlide.querySelectorAll('.car-box');
+        carBoxes.forEach((box, index) => {
+            box.style.animation = 'none';
             setTimeout(() => {
-                entry.target.style.transition = 'all 0.8s ease';
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }, 100);
-            
-            headerObserver.unobserve(entry.target);
+                box.style.animation = '';
+                box.style.animationDelay = `${index * 0.1}s`;
+            }, 10);
+        });
+    }
+}
+
+// Fonction pour mettre à jour l'état des boutons
+function updateNavigationButtons() {
+    if (prevBtn && nextBtn) {
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === totalSlides - 1;
+    }
+}
+
+// Fonction pour aller à la diapositive précédente
+function prevSlide() {
+    if (currentSlide > 0) {
+        currentSlide--;
+        showSlide(currentSlide);
+    }
+}
+
+// Fonction pour aller à la diapositive suivante
+function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        showSlide(currentSlide);
+    }
+}
+
+// Event listeners pour les boutons
+if (prevBtn) {
+    prevBtn.addEventListener('click', prevSlide);
+}
+
+if (nextBtn) {
+    nextBtn.addEventListener('click', nextSlide);
+}
+
+// Navigation au clavier
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') {
+        prevSlide();
+    } else if (e.key === 'ArrowRight') {
+        nextSlide();
+    }
+});
+
+// Gestion des erreurs d'images
+function handleImageError(img) {
+    img.style.display = 'none';
+    const placeholder = img.parentElement.querySelector('.car-placeholder');
+    if (placeholder) {
+        placeholder.style.display = 'flex';
+    }
+}
+
+// Ajouter les gestionnaires d'erreur à toutes les images
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('.car-image img');
+    images.forEach(img => {
+        img.addEventListener('error', () => {
+            handleImageError(img);
+        });
+        
+        // Si l'image est déjà chargée et a échoué
+        if (!img.complete || img.naturalHeight === 0) {
+            img.addEventListener('error', () => {
+                handleImageError(img);
+            }, { once: true });
         }
     });
-}, { threshold: 0.3 });
-
-sectionHeaders.forEach(header => {
-    headerObserver.observe(header);
 });
 
+// Initialisation au chargement de la page
+window.addEventListener('load', () => {
+    showSlide(0);
+    updateNavigationButtons();
+});
+
+// Animation de la flèche au changement de diapositive
+function animateArrow() {
+    const arrowLine = document.querySelector('.slide.active .arrow-line');
+    const arrowHead = document.querySelector('.slide.active .arrow-head');
+    
+    if (arrowLine && arrowHead) {
+        arrowLine.style.transition = 'width 0.8s ease';
+        arrowHead.style.transition = 'left 0.8s ease';
+    }
+}
+
+// Observer pour animer la flèche quand la diapositive change
+const observer = new MutationObserver(() => {
+    animateArrow();
+});
+
+// Observer les changements de classe active
+slides.forEach(slide => {
+    observer.observe(slide, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+});
+
+// Animation initiale
+animateArrow();
